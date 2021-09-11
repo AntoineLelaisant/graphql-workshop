@@ -1,0 +1,31 @@
+---
+version: '3.7'
+
+services:
+  traefik:
+    build:
+      context: apps/traefik
+      dockerfile: Dockerfile
+      target: dev
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - './certs:/etc/certs:ro'
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+
+  api:
+    build:
+      context: apps/api
+      dockerfile: Dockerfile
+      target: dev
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.api.rule=Host(`api.app.localhost`)'
+      - 'traefik.http.routers.api.tls=true'
+    volumes:
+      - './apps/api:/usr/src/app'
+    restart: unless-stopped
